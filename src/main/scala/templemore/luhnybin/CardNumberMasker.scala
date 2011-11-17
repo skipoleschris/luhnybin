@@ -1,25 +1,42 @@
 package templemore.luhnybin
 
+import annotation.tailrec
+
 
 object CardNumberMasker {
-  def mask(inputString: String): String = mask(inputString.toList).mkString("")
+  def mask(inputString: String): String = mask(inputString.toList)
 
-  def mask(inputString: List[Char]): List[Char] = inputString match {
-  	case Nil => Nil
-  	case x :: xs if x.isDigit => {
-  		val maskResult = maskCardNumber(MaskCandidate(x), xs)
-  		maskResult._1 ++ mask(maskResult._2)
-  	}
-  	case x :: xs => x :: mask(xs)
+  def mask(inputString: List[Char]): String = {
+    def maskDigits(chars: List[Char]) = chars.map(ch => if ( ch.isDigit) 'X' else ch)
+
+    val masks = buildMaskCriteria(inputString, 0, List())
+    masks.foldLeft(inputString) { (s, criteria) =>
+      s.slice(0, criteria.fromIndex) ++ 
+      maskDigits(s.slice(criteria.fromIndex, criteria.toIndex)) ++
+      s.slice(criteria.toIndex, s.length)
+    }.mkString("")
   }
 
-  private def maskCardNumber(candidate: MaskCandidate, remainder: List[Char]): Pair[List[Char], List[Char]] = {
-  	remainder match {
-  		case x :: xs if candidate.accept(x) => maskCardNumber(candidate.add(x), xs)
-  		case _ => {
-  			val mask = candidate.applyMask
-  			(mask._1.reverse, mask._2.reverse ++ remainder)
-  		}
-  	}
+  @tailrec
+  def buildMaskCriteria(inputString: List[Char],
+                        index: Int = 0,
+                        masks: List[MaskCriteria] = List()): List[MaskCriteria] = {
+    inputString match {
+      case Nil => masks
+      case x :: xs if x.isDigit => {
+        val maskResult = buildCriteria(MaskCandidate(x, index), xs)
+        buildMaskCriteria(
+          inputString.drop(maskResult.skipCount + 1),
+          index + 1 + maskResult.skipCount,
+          if ( maskResult.isMasked ) maskResult :: masks else masks)
+      }
+      case x :: xs => buildMaskCriteria(xs, index + 1, masks)
+    }
+  }
+
+  @tailrec
+  private def buildCriteria(candidate: MaskCandidate, remainder: List[Char]): MaskCriteria = remainder match {
+    case x :: xs if candidate.accept(x) => buildCriteria(candidate.add(x), xs)
+    case _ => candidate.determineMaskCount
   }
 }
