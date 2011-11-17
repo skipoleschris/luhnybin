@@ -6,7 +6,7 @@ object LuhnCheck {
       case d if ( d > 9 ) => List(d / 10, d % 10)
       case d => List(d)
     }
-    
+
     require(digits.length >= 2)
     require(digits.forall(d => d >= 0 && d <= 9))
 
