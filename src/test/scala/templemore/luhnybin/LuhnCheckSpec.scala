@@ -14,6 +14,7 @@ class LuhnCheckSpec extends Specification { def is =
     "error when given less than 2 digits"                            ! tooFewDigits^
     "error when given a digit greater than 9"                        ! digitTooBig^
     "error when given a negative value digit"                        ! digitTooSmall^
+    "pass when using a real card number"                             ! realCardNumber^
                                                                      end
 
   def validLuhnEven = LuhnCheck.hasValidLuhn(List(5, 6, 7, 8)) must_== true
@@ -23,4 +24,5 @@ class LuhnCheckSpec extends Specification { def is =
   def tooFewDigits = LuhnCheck.hasValidLuhn(List(0)) must throwAn[Exception]
   def digitTooBig = LuhnCheck.hasValidLuhn(List(0, 6, 10, 4)) must throwAn[Exception]
   def digitTooSmall = LuhnCheck.hasValidLuhn(List(0, 6, -1, 4)) must throwAn[Exception]
+  def realCardNumber = LuhnCheck.hasValidLuhn(List(4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)) must_== true
 }
