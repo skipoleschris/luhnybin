@@ -12,7 +12,7 @@ object CardNumberMasker {
   }
 
   @tailrec
-  def buildMaskCriteria(inputString: List[Char],
+  private def buildMaskCriteria(inputString: List[Char],
                         index: Int = 0,
                         masks: List[MaskCriteria] = List()): List[MaskCriteria] = {
     inputString match {

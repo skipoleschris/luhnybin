@@ -18,6 +18,12 @@ class MaskCriteriaSpec extends Specification { def is =
     "mask digits at the end of the string"                           ! endDigits^
     "not mask if there are no digits"                                ! noDigits^
     "error if the string is shorter than the mask criteria"          ! invalidString^
+                                                                     endp^
+  "Building a mask criteria should"                                  ^
+    "build a criteria for a string containing a card number"         ! cardPresentCriteria^
+    "build a criteria for a string not contaning a card number"      ! cardNotPresentCriteria^
+    "error if supplied an empty list"                                ! emptyList^
+    "error if supplied a list that doesn't start with a digit"       ! noDigitAtStart^
                                                                      end
   
   def mask = MaskCriteria(0, 14, 0).isMasked must_== true
@@ -30,4 +36,9 @@ class MaskCriteriaSpec extends Specification { def is =
   def endDigits = MaskCriteria(5, 5, 0).apply("1234567890".toList) must_== "12345XXXXX".toList
   def noDigits = MaskCriteria(0, 10, 0).apply("abcdefghij".toList) must_== "abcdefghij".toList
   def invalidString = MaskCriteria(3, 5, 0).apply("hello".toList) must throwAn[Exception]
+  
+  def cardPresentCriteria = MaskCriteria("4111-1111-1111-1111".toList, 0) must_== MaskCriteria(0, 19, 0)
+  def cardNotPresentCriteria = MaskCriteria("4111-1111-1111-1115".toList, 5) must_== MaskCriteria(5, 0, 0)
+  def emptyList = MaskCriteria(List(), 0) must throwAn[Exception]
+  def noDigitAtStart = MaskCriteria("foo4111111111111111".toList, 0) must throwAn[Exception]
 }
