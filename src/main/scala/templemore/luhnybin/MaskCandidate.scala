@@ -1,9 +1,15 @@
 package templemore.luhnybin
 
+import scala.None
+
 case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, startIndex: Int, locked: Boolean = false) {
 
+  private val MinDigits = 14
+  private val MaxDigits = 16
+  type MaybeMask = Option[List[Char]]
+
 	def add(ch: Char) = {
-    def accept(ch: Char) = digitCount < 16 && !locked && (ch.isDigit || ch == ' ' || ch == '-')
+    def accept(ch: Char) = digitCount < MaxDigits && !locked && (ch.isDigit || ch == ' ' || ch == '-')
 
     if ( accept(ch) ) new MaskCandidate(ch :: characters, if ( ch.isDigit ) digitCount + 1 else digitCount, startIndex)
     else if ( !locked ) copy(locked = true)
@@ -11,20 +17,19 @@ case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, start
   }
 
   def buildCriteria: MaskCriteria = {
-    def skipCount = if ( digitCount <= 14) characters.length - 1 else 0
-    def reduceAndCheck(length: Int): Option[List[Char]] = reduceToLength(length).flatMap { chars =>
-      if ( isCardNumber(chars) ) Some(chars) else None
-    }
+    def skipCount = if ( digitCount <= MinDigits) characters.length - 1 else 0
+    def reduceAndCheck(masked: MaybeMask, length: Int) = masked.orElse(
+      reduceToLength(length) flatMap { chars => if ( isCardNumber(chars) ) Some(chars) else None }
+    )
 
-    if ( digitCount < 14 ) MaskCriteria(startIndex, 0, skipCount)
-    else {
-      val masked = reduceAndCheck(16).orElse(reduceAndCheck(15)).orElse(reduceAndCheck(14))
-      masked.map(result => MaskCriteria(startIndex, result.length, skipCount))
-            .getOrElse(MaskCriteria(startIndex, 0, skipCount))
-    }
+    if ( digitCount < MinDigits ) MaskCriteria(startIndex, 0, skipCount)
+    else (MaxDigits to MinDigits by -1).foldLeft[MaybeMask](None)(reduceAndCheck)
+                                       .map(result => MaskCriteria(startIndex, result.length, skipCount))
+                                       .getOrElse(MaskCriteria(startIndex, 0, skipCount))
   }
 
-	private def reduceToLength(length: Int): Option[List[Char]] = {
+
+	private def reduceToLength(length: Int) = {
 		if ( digitCount < length ) None
 		else if ( digitCount == length ) Some(characters)
 		else {

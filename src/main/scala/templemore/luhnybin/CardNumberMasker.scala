@@ -2,29 +2,24 @@ package templemore.luhnybin
 
 import annotation.tailrec
 
-
 object CardNumberMasker {
-  def mask(inputString: String): String = mask(inputString.toList)
-
-  def mask(inputString: List[Char]): String = {
-    val masks = buildMaskCriteria(inputString, 0, List())
-    masks.foldLeft(inputString) { (s, criteria) => criteria(s) }.mkString("")
+  def mask(inputString: String) = {
+    val characters = inputString.toList
+    buildMaskCriteria(characters).foldLeft(characters) { (s, criteria) => criteria(s) }.mkString("")
   }
 
   @tailrec
   private def buildMaskCriteria(inputString: List[Char],
-                        index: Int = 0,
-                        masks: List[MaskCriteria] = List()): List[MaskCriteria] = {
-    inputString match {
-      case Nil => masks
-      case x :: xs if x.isDigit => {
-        val maskResult = MaskCriteria(inputString, index)
-        buildMaskCriteria(
-          inputString.drop(maskResult.skipCount + 1),
-          index + 1 + maskResult.skipCount,
-          if ( maskResult.isMasked ) maskResult :: masks else masks)
-      }
-      case x :: xs => buildMaskCriteria(xs, index + 1, masks)
+                                 index: Int = 0,
+                                 masks: List[MaskCriteria] = List()): List[MaskCriteria] = {
+    val remainder = inputString.dropWhile(!_.isDigit)
+    if ( remainder.isEmpty ) masks
+    else {
+      val startIndex = index + inputString.length - remainder.length
+      val maskResult = MaskCriteria(remainder, startIndex)
+      buildMaskCriteria(remainder.drop(maskResult.skipCount + 1),
+                        startIndex + 1 + maskResult.skipCount,
+                        if ( maskResult.isMasked ) maskResult :: masks else masks)
     }
   }
 }
