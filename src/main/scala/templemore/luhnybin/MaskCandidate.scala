@@ -1,20 +1,10 @@
 package templemore.luhnybin
 
-import scala.None
-
-case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, startIndex: Int, locked: Boolean = false) {
+case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, startIndex: Int) {
 
   private val MinDigits = 14
-  private val MaxDigits = 16
+  val MaxDigits = 16
   type MaybeMask = Option[List[Char]]
-
-	def add(ch: Char) = {
-    def accept(ch: Char) = digitCount < MaxDigits && !locked && (ch.isDigit || ch == ' ' || ch == '-')
-
-    if ( accept(ch) ) new MaskCandidate(ch :: characters, if ( ch.isDigit ) digitCount + 1 else digitCount, startIndex)
-    else if ( !locked ) copy(locked = true)
-    else this
-  }
 
   def buildCriteria: MaskCriteria = {
     def skipCount = if ( digitCount <= MinDigits) characters.length - 1 else 0
@@ -27,7 +17,6 @@ case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, start
                                        .map(result => MaskCriteria(startIndex, result.length, skipCount))
                                        .getOrElse(MaskCriteria(startIndex, 0, skipCount))
   }
-
 
 	private def reduceToLength(length: Int) = {
 		if ( digitCount < length ) None
@@ -44,4 +33,18 @@ case class MaskCandidate(characters: List[Char] = List(), digitCount: Int, start
 
 	private def isCardNumber(chars: List[Char]) =
 		LuhnCheck.hasValidLuhn(chars.filter(_.isDigit).reverse.map(_.getNumericValue))
+}
+
+object MaskCandidate {
+  def apply(input: List[Char], startIndex: Int) = {
+    def accept(ch: Char, count: Int) = count < 16 && (ch.isDigit || ch == ' ' || ch == '-')
+
+    require(!input.isEmpty && input.head.isDigit)
+    var count = 0
+    new MaskCandidate(input.takeWhile { ch =>
+      val result = accept(ch, count)
+      if ( ch.isDigit && result ) count = count + 1
+      result
+    }.reverse, count, startIndex)
+  }
 }

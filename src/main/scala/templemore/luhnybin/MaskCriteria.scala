@@ -14,12 +14,3 @@ case class MaskCriteria(fromIndex: Int, noOfCharacters: Int, skipCount: Int) {
     (characters slice (toIndex, characters.length))
   }
 }
-
-object MaskCriteria {
-  def apply(input: List[Char], startIndex: Int): MaskCriteria = {
-    require(!input.isEmpty && input.head.isDigit)
-    input.tail.foldLeft(MaskCandidate(input.head :: Nil, 1, startIndex)) {
-      (candidate, ch) => candidate add ch
-    }.buildCriteria
-  }
-}

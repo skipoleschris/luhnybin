@@ -61,5 +61,5 @@ class CardNumberMaskerSpec extends Specification { def is =
       "The card number is: XXXXXXXXXXXXXXXX"
 
   def maskEmbedded =
-    CardNumberMasker.mask("6664111111111111111876") must_== "666XXXXXXXXXXXXXXXX876"
+    CardNumberMasker.mask("9875610591081018250321") must_== "987XXXXXXXXXXXXXXXX321"
 }
